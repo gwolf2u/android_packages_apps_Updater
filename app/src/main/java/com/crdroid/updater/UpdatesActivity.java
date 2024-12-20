@@ -40,10 +40,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
-import android.widget.ImageView;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
@@ -52,12 +53,14 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.gridlayout.widget.GridLayout;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -97,6 +100,9 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
     private RotateAnimation mRefreshAnimation;
 
     private boolean mIsTV;
+
+    private RecyclerView headersRecyclerView;
+    private HeadersAdapter headersAdapter;
 
     private UpdateInfo mToBeExported = null;
     private final ActivityResultLauncher<Intent> mExportUpdate = registerForActivityResult(
@@ -168,12 +174,12 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
                 } else {
                     statusBarHeight = 0;
                 }
-                RelativeLayout headerContainer = findViewById(R.id.header_container);
+                LinearLayout headerContainer = findViewById(R.id.header_container);
                 recyclerView.setOnApplyWindowInsetsListener((view, insets) -> {
                     int top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
-                    CollapsingToolbarLayout.LayoutParams lp =
-                            (CollapsingToolbarLayout.LayoutParams)
-                                    headerContainer.getLayoutParams();
+                    ViewGroup.MarginLayoutParams lp =
+                            (ViewGroup.MarginLayoutParams) 
+                                headerContainer.getLayoutParams();
                     lp.topMargin = top + statusBarHeight;
                     headerContainer.setLayoutParams(lp);
                     return insets;
@@ -184,6 +190,11 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
         TextView headerTitle = findViewById(R.id.header_title);
         headerTitle.setText(getString(R.string.header_title_text,
                 Utils.getDisplayVersion(BuildInfoUtils.getBuildVersion())));
+
+        headersRecyclerView = findViewById(R.id.headers_recycler_view);
+        headersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        headersAdapter = new HeadersAdapter(this, getHeadersData());
+        headersRecyclerView.setAdapter(headersAdapter);
 
         updateLastCheckedString();
 
@@ -343,6 +354,24 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
                 .show();
     }
 
+    private List<HeaderItem> getHeadersData() {
+        List<HeaderItem> headers = new ArrayList<>();
+        headers.add(new HeaderItem(R.string.header_android_version_list, Build.VERSION.RELEASE));
+        headers.add(new HeaderItem(R.string.current_build_date, StringGenerator.getDateLocalizedUTC(this, DateFormat.LONG, BuildInfoUtils.getBuildDateTimestamp())));
+        headers.add(new HeaderItem(R.string.current_build_type, Utils.getBuildType()));
+        headers.add(new HeaderItem(R.string.maintainer_name, Utils.getMaintainer()));
+        headers.add(new HeaderItem(R.string.header_last_updates_check_list, getLastCheckedString()));
+        return headers;
+    }
+
+    private String getLastCheckedString() {
+        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        long lastCheck = preferences.getLong(Constants.PREF_LAST_UPDATE_CHECK, -1) / 1000;
+        return getString(R.string.header_last_updates_check_exact,
+                StringGenerator.getDateLocalized(this, DateFormat.LONG, lastCheck),
+                StringGenerator.getTimeLocalized(this, lastCheck));
+    }
+
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className,
@@ -483,171 +512,137 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
     }
 
     private void updateLastCheckedString() {
-        final SharedPreferences preferences =
-                PreferenceManager.getDefaultSharedPreferences(this);
-        long lastCheck = preferences.getLong(Constants.PREF_LAST_UPDATE_CHECK, -1) / 1000;
-        String lastCheckString = getString(R.string.header_last_updates_check,
-                StringGenerator.getDateLocalized(this, DateFormat.LONG, lastCheck),
-                StringGenerator.getTimeLocalized(this, lastCheck));
-        TextView headerLastCheck = findViewById(R.id.header_last_check);
-        headerLastCheck.setText(lastCheckString);
+        final SharedPreferences preferences = 
+                        PreferenceManager.getDefaultSharedPreferences(this);
 
-        TextView headerBuildVersion = findViewById(R.id.header_build_version);
-        headerBuildVersion.setText(
-                getString(R.string.header_android_version, Build.VERSION.RELEASE));
-
-        TextView headerBuildDate = findViewById(R.id.header_build_date);
-        headerBuildDate.setText(getString(R.string.current_build_date, StringGenerator.getDateLocalizedUTC(this,
-                DateFormat.LONG, BuildInfoUtils.getBuildDateTimestamp())));
-
-        TextView headerBuildType = findViewById(R.id.header_build_type);
-        String buildType = Utils.getBuildType();
-        if (buildType == null || buildType.isEmpty()) {
-            headerBuildType.setText(getString(R.string.build_type_unknown));
-            LinearLayout supportLayout=(LinearLayout)this.findViewById(R.id.support_icons);
-            supportLayout.setVisibility(LinearLayout.GONE);
-        } else {
-            headerBuildType.setText(getString(R.string.current_build_type, buildType));
-        }
-
-        TextView MaintainerName = findViewById(R.id.maintainer_name);
-        String maintainer = Utils.getMaintainer();
-        if (maintainer == null || maintainer.isEmpty()) {
-            MaintainerName.setVisibility(View.GONE);
-        } else {
-            MaintainerName.setText(
-                    getString(R.string.maintainer_name, maintainer));
-            MaintainerName.setVisibility(View.VISIBLE);
-        }
-
-        ImageView forumImage = findViewById(R.id.support_forum);
+        Button forumButton = findViewById(R.id.support_forum);
         String forum = Utils.getForum();
-        forumImage.setOnClickListener(new View.OnClickListener() {
+        forumButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent();
                 intent.setAction(Intent.ACTION_VIEW);
                 intent.addCategory(Intent.CATEGORY_BROWSABLE);
                 intent.setData(Uri.parse(forum));
                 startActivity(intent);
-                }
-            });
+            }
+        });
 
-        ImageView telegramImage = findViewById(R.id.support_telegram);
+        Button telegramButton = findViewById(R.id.support_telegram);
         String telegram = Utils.getTelegram();
         if (telegram == null || telegram.isEmpty()) {
-            telegramImage.setVisibility(View.GONE);
+            telegramButton.setVisibility(View.GONE);
         } else {
-            telegramImage.setVisibility(View.VISIBLE);
-            telegramImage.setOnClickListener(new View.OnClickListener() {
+            telegramButton.setVisibility(View.VISIBLE);
+            telegramButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);
                     intent.addCategory(Intent.CATEGORY_BROWSABLE);
                     intent.setData(Uri.parse(telegram));
                     startActivity(intent);
-                    }
+                }
             });
         }
 
-        ImageView recoveryImage = findViewById(R.id.support_recovery);
+        Button recoveryButton = findViewById(R.id.support_recovery);
         String recovery = Utils.getRecovery();
         if (recovery == null || recovery.isEmpty()) {
-            recoveryImage.setVisibility(View.GONE);
+            recoveryButton.setVisibility(View.GONE);
         } else {
-            recoveryImage.setVisibility(View.VISIBLE);
-            recoveryImage.setOnClickListener(new View.OnClickListener() {
+            recoveryButton.setVisibility(View.VISIBLE);
+            recoveryButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);
                     intent.addCategory(Intent.CATEGORY_BROWSABLE);
                     intent.setData(Uri.parse(recovery));
                     startActivity(intent);
-                    }
+                }
             });
         }
 
-        ImageView paypalImage = findViewById(R.id.support_paypal);
+        Button paypalButton = findViewById(R.id.support_paypal);
         String paypal = Utils.getPaypal();
-        if (paypal == null || recovery.isEmpty()) {
-            paypalImage.setVisibility(View.GONE);
+        if (paypal == null || paypal.isEmpty()) {
+            paypalButton.setVisibility(View.GONE);
         } else {
-            paypalImage.setVisibility(View.VISIBLE);
-            paypalImage.setOnClickListener(new View.OnClickListener() {
+            paypalButton.setVisibility(View.VISIBLE);
+            paypalButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);
                     intent.addCategory(Intent.CATEGORY_BROWSABLE);
                     intent.setData(Uri.parse(paypal));
                     startActivity(intent);
-                    }
+                }
             });
         }
 
-        ImageView gappsImage = findViewById(R.id.support_gapps);
+        Button gappsButton = findViewById(R.id.support_gapps);
         String gapps = Utils.getGapps();
         if (gapps == null || gapps.isEmpty()) {
-            gappsImage.setVisibility(View.GONE);
+            gappsButton.setVisibility(View.GONE);
         } else {
-            gappsImage.setVisibility(View.VISIBLE);
-            gappsImage.setOnClickListener(new View.OnClickListener() {
+            gappsButton.setVisibility(View.VISIBLE);
+            gappsButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);
                     intent.addCategory(Intent.CATEGORY_BROWSABLE);
                     intent.setData(Uri.parse(gapps));
                     startActivity(intent);
-                    }
+                }
             });
         }
 
-        ImageView firmwareImage = findViewById(R.id.support_firmware);
+        Button firmwareButton = findViewById(R.id.support_firmware);
         String firmware = Utils.getFirmware();
         if (firmware == null || firmware.isEmpty()) {
-            firmwareImage.setVisibility(View.GONE);
+            firmwareButton.setVisibility(View.GONE);
         } else {
-            firmwareImage.setVisibility(View.VISIBLE);
-            firmwareImage.setOnClickListener(new View.OnClickListener() {
+            firmwareButton.setVisibility(View.VISIBLE);
+            firmwareButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);
                     intent.addCategory(Intent.CATEGORY_BROWSABLE);
                     intent.setData(Uri.parse(firmware));
                     startActivity(intent);
-                    }
+                }
             });
         }
 
-        ImageView modemImage = findViewById(R.id.support_modem);
+        Button modemButton = findViewById(R.id.support_modem);
         String modem = Utils.getModem();
         if (modem == null || modem.isEmpty()) {
-            modemImage.setVisibility(View.GONE);
+            modemButton.setVisibility(View.GONE);
         } else {
-            modemImage.setVisibility(View.VISIBLE);
-            modemImage.setOnClickListener(new View.OnClickListener() {
+            modemButton.setVisibility(View.VISIBLE);
+            modemButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);
                     intent.addCategory(Intent.CATEGORY_BROWSABLE);
                     intent.setData(Uri.parse(modem));
                     startActivity(intent);
-                    }
+                }
             });
         }
 
-        ImageView bootloaderImage = findViewById(R.id.support_bootloader);
+        Button bootloaderButton = findViewById(R.id.support_bootloader);
         String bootloader = Utils.getBootloader();
         if (bootloader == null || bootloader.isEmpty()) {
-            bootloaderImage.setVisibility(View.GONE);
+            bootloaderButton.setVisibility(View.GONE);
         } else {
-            bootloaderImage.setVisibility(View.VISIBLE);
-            bootloaderImage.setOnClickListener(new View.OnClickListener() {
+            bootloaderButton.setVisibility(View.VISIBLE);
+            bootloaderButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);
                     intent.addCategory(Intent.CATEGORY_BROWSABLE);
                     intent.setData(Uri.parse(bootloader));
                     startActivity(intent);
-                    }
+                }
             });
         }
     }
@@ -809,5 +804,56 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
                     }
                 })
                 .show();
+    }
+}
+
+class HeaderItem {
+    int labelResId;
+    String value;
+
+    HeaderItem(int labelResId, String value) {
+        this.labelResId = labelResId;
+        this.value = value;
+    }
+}
+
+class HeadersAdapter extends RecyclerView.Adapter<HeadersAdapter.ViewHolder> {
+
+    private List<HeaderItem> headers;
+    private Context context;
+
+    HeadersAdapter(Context context, List<HeaderItem> headers) {
+        this.context = context;
+        this.headers = headers;
+    }
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_header, parent, false);
+        return new ViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        HeaderItem header = headers.get(position);
+        holder.label.setText(context.getString(header.labelResId));
+        holder.value.setText(header.value);
+    }
+
+    @Override
+    public int getItemCount() {
+        return headers.size();
+    }
+
+    class ViewHolder extends RecyclerView.ViewHolder {
+        TextView label;
+        TextView value;
+
+        ViewHolder(View itemView) {
+            super(itemView);
+            label = itemView.findViewById(R.id.label);
+            value = itemView.findViewById(R.id.value);
+        }
     }
 }

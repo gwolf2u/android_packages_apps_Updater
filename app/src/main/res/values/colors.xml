@@ -10,4 +10,7 @@
 
     <color name="inverted">#212121</color>
     <color name="ic_background">#333333</color>
+
+    <color name="gradient_start_color">#f0f0f0</color>
+    <color name="gradient_end_color">#e5e5e5</color>
 </resources>

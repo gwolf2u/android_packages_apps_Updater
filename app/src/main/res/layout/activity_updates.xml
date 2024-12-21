@@ -100,95 +100,13 @@
                         android:textColor="?android:attr/textColorPrimary"
                         android:textSize="12sp" />
 
-                    <GridLayout
-                        android:id="@+id/support_buttons_grid"
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/support_buttons_recycler_view"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:columnCount="2"
                         android:orientation="horizontal"
-                        android:padding="10dp">
+                        android:padding="10dp"/>
 
-                        <Button
-                            android:id="@+id/support_telegram"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:text="Telegram"
-                            android:drawableLeft="@drawable/ic_telegram"
-                            android:drawablePadding="8dp"
-                            android:layout_gravity="fill"/>
-
-                        <Button
-                            android:id="@+id/support_forum"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:text="Forum"
-                            android:drawableLeft="@drawable/ic_forum"
-                            android:drawablePadding="8dp"
-                            android:layout_gravity="fill"/>
-
-                        <Button
-                            android:id="@+id/support_recovery"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:text="Recovery"
-                            android:drawableLeft="@drawable/ic_recovery"
-                            android:drawablePadding="8dp"
-                            android:layout_gravity="fill"/>
-
-                        <Button
-                            android:id="@+id/support_gapps"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:text="GApps"
-                            android:drawableLeft="@drawable/ic_gapps"
-                            android:drawablePadding="8dp"
-                            android:layout_gravity="fill"/>
-
-                        <Button
-                            android:id="@+id/support_firmware"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:text="Firmware"
-                            android:drawableLeft="@drawable/ic_firmware"
-                            android:drawablePadding="8dp"
-                            android:layout_gravity="fill"/>
-
-                        <Button
-                            android:id="@+id/support_modem"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:text="Modem"
-                            android:drawableLeft="@drawable/ic_modem"
-                            android:drawablePadding="8dp"
-                            android:layout_gravity="fill"/>
-
-                        <Button
-                            android:id="@+id/support_bootloader"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:text="Bootloader"
-                            android:drawableLeft="@drawable/ic_bootloader"
-                            android:drawablePadding="8dp"
-                            android:layout_gravity="fill"/>
-
-                        <Button
-                            android:id="@+id/support_paypal"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:text="PayPal"
-                            android:drawableLeft="@drawable/ic_paypal"
-                            android:drawablePadding="8dp"
-                            android:layout_gravity="fill"/>
-
-                    </GridLayout>
                 </LinearLayout>
             </LinearLayout>
 

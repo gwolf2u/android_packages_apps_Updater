@@ -63,6 +63,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.gridlayout.widget.GridLayout;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SimpleItemAnimator;
@@ -103,6 +104,9 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
 
     private RecyclerView headersRecyclerView;
     private HeadersAdapter headersAdapter;
+
+    private RecyclerView supportButtonsRecyclerView;
+    private SupportButtonsAdapter supportButtonsAdapter;
 
     private UpdateInfo mToBeExported = null;
     private final ActivityResultLauncher<Intent> mExportUpdate = registerForActivityResult(
@@ -195,6 +199,9 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
         headersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         headersAdapter = new HeadersAdapter(this, getHeadersData());
         headersRecyclerView.setAdapter(headersAdapter);
+
+        supportButtonsRecyclerView = findViewById(R.id.support_buttons_recycler_view);
+        supportButtonsRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
 
         updateLastCheckedString();
 
@@ -515,136 +522,18 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
         final SharedPreferences preferences = 
                         PreferenceManager.getDefaultSharedPreferences(this);
 
-        Button forumButton = findViewById(R.id.support_forum);
-        String forum = Utils.getForum();
-        forumButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_VIEW);
-                intent.addCategory(Intent.CATEGORY_BROWSABLE);
-                intent.setData(Uri.parse(forum));
-                startActivity(intent);
-            }
-        });
+        List<SupportButtonsAdapter.SupportButton> supportButtons = new ArrayList<>();
+        supportButtons.add(new SupportButtonsAdapter.SupportButton("Forum", R.drawable.ic_forum, Utils.getForum()));
+        supportButtons.add(new SupportButtonsAdapter.SupportButton("Telegram", R.drawable.ic_telegram, Utils.getTelegram()));
+        supportButtons.add(new SupportButtonsAdapter.SupportButton("Recovery", R.drawable.ic_recovery, Utils.getRecovery()));
+        supportButtons.add(new SupportButtonsAdapter.SupportButton("GApps", R.drawable.ic_gapps, Utils.getGapps()));
+        supportButtons.add(new SupportButtonsAdapter.SupportButton("Firmware", R.drawable.ic_firmware, Utils.getFirmware()));
+        supportButtons.add(new SupportButtonsAdapter.SupportButton("Modem", R.drawable.ic_modem, Utils.getModem()));
+        supportButtons.add(new SupportButtonsAdapter.SupportButton("Bootloader", R.drawable.ic_bootloader, Utils.getBootloader()));
+        supportButtons.add(new SupportButtonsAdapter.SupportButton("PayPal", R.drawable.ic_paypal, Utils.getPaypal()));
 
-        Button telegramButton = findViewById(R.id.support_telegram);
-        String telegram = Utils.getTelegram();
-        if (telegram == null || telegram.isEmpty()) {
-            telegramButton.setVisibility(View.GONE);
-        } else {
-            telegramButton.setVisibility(View.VISIBLE);
-            telegramButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.addCategory(Intent.CATEGORY_BROWSABLE);
-                    intent.setData(Uri.parse(telegram));
-                    startActivity(intent);
-                }
-            });
-        }
-
-        Button recoveryButton = findViewById(R.id.support_recovery);
-        String recovery = Utils.getRecovery();
-        if (recovery == null || recovery.isEmpty()) {
-            recoveryButton.setVisibility(View.GONE);
-        } else {
-            recoveryButton.setVisibility(View.VISIBLE);
-            recoveryButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.addCategory(Intent.CATEGORY_BROWSABLE);
-                    intent.setData(Uri.parse(recovery));
-                    startActivity(intent);
-                }
-            });
-        }
-
-        Button paypalButton = findViewById(R.id.support_paypal);
-        String paypal = Utils.getPaypal();
-        if (paypal == null || paypal.isEmpty()) {
-            paypalButton.setVisibility(View.GONE);
-        } else {
-            paypalButton.setVisibility(View.VISIBLE);
-            paypalButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.addCategory(Intent.CATEGORY_BROWSABLE);
-                    intent.setData(Uri.parse(paypal));
-                    startActivity(intent);
-                }
-            });
-        }
-
-        Button gappsButton = findViewById(R.id.support_gapps);
-        String gapps = Utils.getGapps();
-        if (gapps == null || gapps.isEmpty()) {
-            gappsButton.setVisibility(View.GONE);
-        } else {
-            gappsButton.setVisibility(View.VISIBLE);
-            gappsButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.addCategory(Intent.CATEGORY_BROWSABLE);
-                    intent.setData(Uri.parse(gapps));
-                    startActivity(intent);
-                }
-            });
-        }
-
-        Button firmwareButton = findViewById(R.id.support_firmware);
-        String firmware = Utils.getFirmware();
-        if (firmware == null || firmware.isEmpty()) {
-            firmwareButton.setVisibility(View.GONE);
-        } else {
-            firmwareButton.setVisibility(View.VISIBLE);
-            firmwareButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.addCategory(Intent.CATEGORY_BROWSABLE);
-                    intent.setData(Uri.parse(firmware));
-                    startActivity(intent);
-                }
-            });
-        }
-
-        Button modemButton = findViewById(R.id.support_modem);
-        String modem = Utils.getModem();
-        if (modem == null || modem.isEmpty()) {
-            modemButton.setVisibility(View.GONE);
-        } else {
-            modemButton.setVisibility(View.VISIBLE);
-            modemButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.addCategory(Intent.CATEGORY_BROWSABLE);
-                    intent.setData(Uri.parse(modem));
-                    startActivity(intent);
-                }
-            });
-        }
-
-        Button bootloaderButton = findViewById(R.id.support_bootloader);
-        String bootloader = Utils.getBootloader();
-        if (bootloader == null || bootloader.isEmpty()) {
-            bootloaderButton.setVisibility(View.GONE);
-        } else {
-            bootloaderButton.setVisibility(View.VISIBLE);
-            bootloaderButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.addCategory(Intent.CATEGORY_BROWSABLE);
-                    intent.setData(Uri.parse(bootloader));
-                    startActivity(intent);
-                }
-            });
-        }
+        supportButtonsAdapter = new SupportButtonsAdapter(this, supportButtons);
+        supportButtonsRecyclerView.setAdapter(supportButtonsAdapter);
     }
 
     private void handleDownloadStatusChange(String downloadId) {
